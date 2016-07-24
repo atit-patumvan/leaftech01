@@ -18,6 +18,10 @@ float humidity, temperature;  // Values read from dht sensor
 
 typedef void (*FrameCallback)(void);
 
+int f1 = 0; //Frame flip Flag 1
+int f2 = 0; //Frame flip Flag 2
+int frameloop = 1; // Frame display flag
+
 void drawFrame0() {
 
   display.setTextAlignment(TEXT_ALIGN_LEFT);
@@ -35,14 +39,19 @@ void drawFrame1() {
   display.drawString(0, 30, floatToString(buffer, temperature, 2));
 }
 
+void drawFrame2() {
 
-FrameCallback frames[] = {drawFrame0, drawFrame1};
+}
+
+FrameCallback frames[] = {drawFrame0, drawFrame1, drawFrame2};
+
 void setup()
 {
   Serial.begin(115200);
   Serial.println();
   Serial.println();
 
+ pinMode(0, INPUT); // GPIO0, Page Flip Button
   // Initialising the UI will init the display too.
   display.init();
   
@@ -61,8 +70,22 @@ void setup()
 void loop() {
     humidity = dht.readHumidity();          // Read humidity (percent)
     temperature = dht.readTemperature();     // Read temperature
+    if (digitalRead(0) == LOW) {
+    f1 = f1 ^ 1;
+  }
+  if (f1 != f2) {
+    f2 = f1;
+    switch (frameloop) {
+      case 1:
+        frameloop = 2;
+        break;
+      case 2:
+        frameloop = 1;
+        break;
+    }
+  }
     display.clear();
-    frames[1]();
+    frames[frameloop]();
     display.display();
     delay(1000);
 }
